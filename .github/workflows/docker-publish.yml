@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        path: [adaptivecpp-base, adaptivecpp-hpc]
+        path: [adaptivecpp-base]
     permissions:
       contents: read
       packages: write
