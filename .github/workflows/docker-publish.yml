@@ -20,7 +20,9 @@ jobs:
       matrix:
         include:
           - path: adaptivecpp-base
+            dependencies: ''
           - path: adaptivecpp-hpc  # TODO: would need dependency on adaptivecpp-base matrix job, but cant to in this paradigm...
+            dependencies: '["ghcr.io/cbyrohl/adaptivecpp-base:latest"]'
     permissions:
       contents: read
       packages: write
@@ -46,6 +48,15 @@ jobs:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Pull necessary Docker images
+        id: pull-images
+        run: |
+          dependencies=$(echo '${{ matrix.dependencies }}' | jq -r '.[]')
+          for image in $dependencies; do
+            echo "Pulling $image..."
+            docker pull $image
+          done
 
       - name: Extract Docker metadata
         id: meta
