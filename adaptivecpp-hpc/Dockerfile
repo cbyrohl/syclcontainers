@@ -1,5 +1,5 @@
 # Use the custom base image
-FROM adaptivecpp-base:main
+FROM ghcr.io/cbyrohl/adaptivecpp-base:main
 
 # Install HDF5 and OpenMPI
 RUN apt-get update && apt-get install -y \
