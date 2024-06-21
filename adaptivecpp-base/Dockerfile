@@ -13,6 +13,7 @@ RUN apt-get update && apt-get install -y wget gnupg software-properties-common \
     build-essential \
     cmake \
     git \
+    libstdc++6 \
     libboost-all-dev \
     python3-pip \
     clang-17 \
@@ -44,7 +45,7 @@ RUN cmake -S . -B build \
     -DWITH_CUDA_BACKEND=OFF \
     -DWITH_ROCM_BACKEND=OFF \
     -DLLVM_DIR=/usr/lib/llvm-17 \
-    -DCLANG_EXECUTABLE_PATH=/usr/bin/clang-17
+    -DCLANG_EXECUTABLE_PATH=/usr/bin/clang++-17
 
 # Build and install
 RUN cmake --build build --target install
