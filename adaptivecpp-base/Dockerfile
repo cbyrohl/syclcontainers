@@ -29,7 +29,7 @@ RUN update-alternatives --install /usr/bin/clang clang /usr/bin/clang-17 100 \
     && update-alternatives --install /usr/bin/llvm-config llvm-config /usr/bin/llvm-config-17 100
 
 # Clone the AdaptiveCpp repository
-RUN git clone --depth 1 --branch v24.02.0 https://github.com/illuhad/hipSYCL.git /hipsycl
+RUN git clone --depth 1 --branch v24.06.0 https://github.com/illuhad/hipSYCL.git /hipsycl
 
 # Set the working directory to the hipSYCL directory
 WORKDIR /hipsycl
