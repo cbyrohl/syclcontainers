@@ -1,6 +1,7 @@
 name: Docker
 
 on:
+  workflow_dispatch:   # Manually trigger the workflow
   schedule:
     - cron: '29 18 * * *'
   push:
