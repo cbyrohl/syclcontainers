@@ -4,6 +4,9 @@ FROM ubuntu:24.04
 # Set environment variables to non-interactive (this avoids some prompts)
 ENV DEBIAN_FRONTEND=noninteractive
 
+# Define the default Clang version as an argument with a default value
+ARG CLANG_VERSION=17
+
 # Install necessary packages and add LLVM repository
 RUN apt-get update && apt-get install -y wget gnupg software-properties-common \
     # --- Add Kitware APT repo for latest CMake (need cmake>=3.29) ---
@@ -12,7 +15,7 @@ RUN apt-get update && apt-get install -y wget gnupg software-properties-common \
     # --- LLVM installation ---
     && wget https://apt.llvm.org/llvm.sh \
     && chmod +x llvm.sh \
-    && ./llvm.sh 17 \
+    && ./llvm.sh ${CLANG_VERSION} \
     && apt-get install -y \
     build-essential \
     cmake \
@@ -20,17 +23,17 @@ RUN apt-get update && apt-get install -y wget gnupg software-properties-common \
     libstdc++6 \
     libboost-all-dev \
     python3-pip \
-    clang-17 \
-    libclang-17-dev \
-    llvm-17 \
-    llvm-17-dev \
-    libomp-17-dev \
-    ninja-build \ 
+    clang-${CLANG_VERSION} \
+    libclang-${CLANG_VERSION}-dev \
+    llvm-${CLANG_VERSION} \
+    llvm-${CLANG_VERSION}-dev \
+    libomp-${CLANG_VERSION}-dev \
+    ninja-build \
     && rm -rf /var/lib/apt/lists/*
 
 # Set clang and llvm-config binaries to the installed version
-RUN update-alternatives --install /usr/bin/clang clang /usr/bin/clang-17 100 \
-    && update-alternatives --install /usr/bin/llvm-config llvm-config /usr/bin/llvm-config-17 100
+RUN update-alternatives --install /usr/bin/clang clang /usr/bin/clang-${CLANG_VERSION} 100 \
+    && update-alternatives --install /usr/bin/llvm-config llvm-config /usr/bin/llvm-config-${CLANG_VERSION} 100
 
 # Clone the AdaptiveCpp repository
 RUN git clone --depth 1 --branch v24.06.0 https://github.com/illuhad/hipSYCL.git /hipsycl
@@ -48,8 +51,8 @@ RUN cmake -S . -B build \
     -DWITH_CPU_BACKEND=ON \
     -DWITH_CUDA_BACKEND=OFF \
     -DWITH_ROCM_BACKEND=OFF \
-    -DLLVM_DIR=/usr/lib/llvm-17 \
-    -DCLANG_EXECUTABLE_PATH=/usr/bin/clang++-17
+    -DLLVM_DIR=/usr/lib/llvm-${CLANG_VERSION} \
+    -DCLANG_EXECUTABLE_PATH=/usr/bin/clang++-${CLANG_VERSION}
 
 # Build and install
 RUN cmake --build build --target install
