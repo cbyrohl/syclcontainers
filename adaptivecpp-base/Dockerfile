@@ -6,6 +6,10 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 # Install necessary packages and add LLVM repository
 RUN apt-get update && apt-get install -y wget gnupg software-properties-common \
+    # --- Add Kitware APT repo for latest CMake (need cmake>=3.29) ---
+    && wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc | apt-key add - \
+    && apt-add-repository "deb https://apt.kitware.com/ubuntu/ $(lsb_release -cs) main" \
+    # --- LLVM installation ---
     && wget https://apt.llvm.org/llvm.sh \
     && chmod +x llvm.sh \
     && ./llvm.sh 17 \
