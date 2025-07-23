@@ -18,12 +18,7 @@ RUN apt-get update && apt-get install -y wget gnupg software-properties-common \
     && ./llvm.sh ${CLANG_VERSION} \
     && apt-get install -y \
     build-essential \
-    # install the highest cmake version below 4
-    && apt-get update \
-    && apt-cache madison cmake | awk '{print $3}' | grep -E '^3\.' | sort -V | tail -n 1 > /tmp/cmake-version.txt \
-    && CMAKE_VERSION=$(cat /tmp/cmake-version.txt) \
-    && apt-get install -y cmake=$CMAKE_VERSION \
-    # continue as usual with other packages
+    cmake=cmake=3.31.8-0kitware1ubuntu24.04.1 \
     git \
     libstdc++6 \
     libboost-all-dev \
