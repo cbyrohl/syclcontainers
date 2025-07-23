@@ -18,7 +18,9 @@ RUN apt-get update && apt-get install -y wget gnupg software-properties-common \
     && ./llvm.sh ${CLANG_VERSION} \
     && apt-get install -y \
     build-essential \
-    cmake=3.31.8-0kitware1ubuntu24.04.1 \
+    # use last version 3 cmake version
+    cmake=3.31.8-0kitware1ubuntu24.04.1 \ 
+    cmake-data=3.31.8-0kitware1ubuntu24.04.1 \
     git \
     libstdc++6 \
     libboost-all-dev \
