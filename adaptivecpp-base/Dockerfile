@@ -7,6 +7,9 @@ ENV DEBIAN_FRONTEND=noninteractive
 # Define the default Clang version as an argument with a default value
 ARG CLANG_VERSION=17
 
+# Set AdaptiveCpp version
+ARG ACPP_VERSION=v25.02.0
+
 # Install necessary packages and add LLVM repository
 RUN apt-get update && apt-get install -y wget gnupg software-properties-common \
     # --- Add Kitware APT repo for latest CMake (need cmake>=3.29) ---
@@ -38,7 +41,7 @@ RUN update-alternatives --install /usr/bin/clang clang /usr/bin/clang-${CLANG_VE
     && update-alternatives --install /usr/bin/llvm-config llvm-config /usr/bin/llvm-config-${CLANG_VERSION} 100
 
 # Clone the AdaptiveCpp repository
-RUN git clone --depth 1 --branch v24.06.0 https://github.com/illuhad/hipSYCL.git /hipsycl
+RUN git clone --depth 1 --branch $ACPP_VERSION https://github.com/illuhad/hipSYCL.git /hipsycl
 
 # Set the working directory to the hipSYCL directory
 WORKDIR /hipsycl
