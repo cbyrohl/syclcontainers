@@ -29,6 +29,7 @@ RUN apt-get update && apt-get install -y wget gnupg software-properties-common \
     libboost-all-dev \
     python3-pip \
     clang-${CLANG_VERSION} \
+    clang-tools-${CLANG_VERSION} \
     libclang-${CLANG_VERSION}-dev \
     llvm-${CLANG_VERSION} \
     llvm-${CLANG_VERSION}-dev \
