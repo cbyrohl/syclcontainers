@@ -5,7 +5,7 @@ FROM ubuntu:24.04
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Define the default Clang version as an argument with a default value
-ARG CLANG_VERSION=17
+ARG CLANG_VERSION=18
 
 # Set AdaptiveCpp version
 ARG ACPP_VERSION=v25.02.0
