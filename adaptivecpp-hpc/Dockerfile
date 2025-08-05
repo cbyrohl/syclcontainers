@@ -8,6 +8,7 @@ RUN apt-get update && apt-get install -y \
     hdf5-tools \
     openmpi-bin \
     libopenmpi-dev \
+    libgmp-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Set environment variables, if necessary
