@@ -25,6 +25,7 @@ RUN apt-get update && apt-get install -y wget gnupg software-properties-common \
     cmake=3.31.8-0kitware1ubuntu24.04.1 \ 
     cmake-data=3.31.8-0kitware1ubuntu24.04.1 \
     git \
+    gdb \
     libstdc++6 \
     libboost-all-dev \
     python3-pip \
