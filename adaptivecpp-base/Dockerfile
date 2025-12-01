@@ -11,7 +11,7 @@ ARG CLANG_VERSION=18
 ARG ACPP_VERSION=v25.02.0
 
 # Install necessary packages and add LLVM repository
-RUN apt-get update && apt-get install -y wget gnupg software-properties-common \
+RUN apt-get update && apt-get install -y wget gnupg software-properties-common lsb-release \
     # --- Add Kitware APT repo for latest CMake (need cmake>=3.29) ---
     && wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc | apt-key add - \
     && apt-add-repository "deb https://apt.kitware.com/ubuntu/ $(lsb_release -cs) main" \
@@ -19,6 +19,7 @@ RUN apt-get update && apt-get install -y wget gnupg software-properties-common \
     && wget https://apt.llvm.org/llvm.sh \
     && chmod +x llvm.sh \
     && ./llvm.sh ${CLANG_VERSION} \
+    && apt-get update \
     && apt-get install -y \
     build-essential \
     # use last version 3 cmake version
@@ -33,6 +34,7 @@ RUN apt-get update && apt-get install -y wget gnupg software-properties-common \
     clang-tools-${CLANG_VERSION} \
     libclang-${CLANG_VERSION}-dev \
     llvm-${CLANG_VERSION} \
+    llvm-${CLANG_VERSION}-tools \
     llvm-${CLANG_VERSION}-dev \
     libomp-${CLANG_VERSION}-dev \
     ninja-build \
@@ -40,7 +42,12 @@ RUN apt-get update && apt-get install -y wget gnupg software-properties-common \
 
 # Set clang and llvm-config binaries to the installed version
 RUN update-alternatives --install /usr/bin/clang clang /usr/bin/clang-${CLANG_VERSION} 100 \
-    && update-alternatives --install /usr/bin/llvm-config llvm-config /usr/bin/llvm-config-${CLANG_VERSION} 100
+    && update-alternatives --install /usr/bin/llvm-config llvm-config /usr/bin/llvm-config-${CLANG_VERSION} 100 \
+    && if [ -x /usr/bin/llvm-cov-${CLANG_VERSION} ]; then \
+         ln -sf /usr/bin/llvm-cov-${CLANG_VERSION} /usr/local/bin/llvm-cov; \
+       elif [ -x /usr/lib/llvm-${CLANG_VERSION}/bin/llvm-cov ]; then \
+         ln -sf /usr/lib/llvm-${CLANG_VERSION}/bin/llvm-cov /usr/local/bin/llvm-cov; \
+       fi
 
 # Clone the AdaptiveCpp repository
 RUN git clone --depth 1 --branch $ACPP_VERSION https://github.com/illuhad/hipSYCL.git /hipsycl
@@ -72,6 +79,7 @@ ENV LD_LIBRARY_PATH="${HIPSYCL_INSTALL_DIR}/lib:${LD_LIBRARY_PATH}"
 ENV LIBRARY_PATH="${HIPSYCL_INSTALL_DIR}/lib:${LIBRARY_PATH}"
 ENV CC=cc
 ENV CXX=acpp
+ENV LLVM_COV=/usr/local/bin/llvm-cov
 
 # Set the default command to bash
 CMD ["bash"]
