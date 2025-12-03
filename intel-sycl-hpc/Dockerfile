@@ -13,5 +13,14 @@ RUN apt-get update && apt-get install -y \
     libgmp-dev \
     && rm -rf /var/lib/apt/lists/*
 
+RUN wget -O /tmp/intel-mpi-2021.17.0.377_offline.sh \
+        https://registrationcenter-download.intel.com/akdlm/IRC_NAS/0a3cb474-49c7-45a9-9dea-104122592a63/intel-mpi-2021.17.0.377_offline.sh \
+    && sh /tmp/intel-mpi-2021.17.0.377_offline.sh \
+        -a --silent --cli --eula accept \
+    && rm -f /tmp/intel-mpi-2021.17.0.377_offline.sh
+
+# Add Intel MPI to PATH
+ENV PATH="/opt/intel/oneapi/mpi/latest/bin:${PATH}"
+
 # Command to keep the container running
 CMD ["bash"]
