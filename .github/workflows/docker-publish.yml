@@ -3,7 +3,7 @@ name: Docker
 on:
   workflow_dispatch:   # Manually trigger the workflow
   schedule:
-    - cron: '29 18 * * *'
+    - cron: '29 18 * * 0'  # Every Sunday at 18:29 UTC
   push:
     branches: [ "main" ]
     tags: [ 'v*.*.*' ]
