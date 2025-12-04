@@ -16,7 +16,7 @@ env:
 
 jobs:
   build-and-push:
-    runs-on: ${{ contains(matrix.path, 'intel') && 'linux-large' || 'ubuntu-latest' }}
+    runs-on: ${{ contains(matrix.path, 'intel') && fromJSON('{"group":"Default","labels":"linux-large"}') || 'ubuntu-latest' }}
     strategy:
       matrix:
         include:
