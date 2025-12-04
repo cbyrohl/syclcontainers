@@ -23,11 +23,11 @@ jobs:
           - path: adaptivecpp-base
             dependencies: ''
           - path: adaptivecpp-hpc  # TODO: would need dependency on adaptivecpp-base matrix job, but cant to in this paradigm...
-            dependencies: '["ghcr.io/cbyrohl/adaptivecpp-base:main"]'
+            dependencies: '["ghcr.io/thor-rt/adaptivecpp-base:main"]'
           - path: intel-sycl-base
             dependencies: ''
           - path: intel-sycl-hpc
-            dependencies: '["ghcr.io/cbyrohl/intel-sycl-base:main"]'
+            dependencies: '["ghcr.io/thor-rt/intel-sycl-base:main"]'
     permissions:
       contents: read
       packages: write
