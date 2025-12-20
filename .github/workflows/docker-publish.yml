@@ -1,7 +1,7 @@
 name: Docker
 
 on:
-  workflow_dispatch:   # Manually trigger the workflow
+  workflow_dispatch:
   schedule:
     - cron: '29 18 * * 0'  # Every Sunday at 18:29 UTC
   push:
@@ -12,22 +12,17 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  build-and-push:
+  # Build and test base images first
+  build-base:
     runs-on: ${{ contains(matrix.path, 'intel') && fromJSON('{"group":"Default","labels":"ubuntu-75gb"}') || 'ubuntu-latest' }}
     strategy:
+      fail-fast: false
       matrix:
         include:
           - path: adaptivecpp-base
-            dependencies: ''
-          - path: adaptivecpp-hpc  # TODO: would need dependency on adaptivecpp-base matrix job, but cant to in this paradigm...
-            dependencies: '["ghcr.io/thor-rt/adaptivecpp-base:main"]'
           - path: intel-sycl-base
-            dependencies: ''
-          - path: intel-sycl-hpc
-            dependencies: '["ghcr.io/thor-rt/intel-sycl-base:main"]'
     permissions:
       contents: read
       packages: write
@@ -37,14 +32,39 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@f95db51fddba0c2d1ec667646a06c2ce06100226
+
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@96383f45573cb7f253c731d3b3ab81c87ef81934
+        with:
+          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ matrix.path }}
+
+      - name: Build Docker image
+        uses: docker/build-push-action@0565240e2d4ab88bba5387d719585280857ece09
+        with:
+          context: ./${{ matrix.path }}
+          load: true
+          tags: ${{ matrix.path }}:test
+          cache-from: type=gha,scope=${{ matrix.path }}
+          cache-to: type=gha,scope=${{ matrix.path }},mode=max
+
+      - name: Run tests
+        run: |
+          if [ "${{ matrix.path }}" = "intel-sycl-base" ]; then
+            docker run --rm -v ${{ github.workspace }}/tests:/tests ${{ matrix.path }}:test \
+              bash -c "source /opt/intel/oneapi/setvars.sh && /tests/run_tests.sh"
+          elif [ "${{ matrix.path }}" = "adaptivecpp-base" ]; then
+            docker run --rm -v ${{ github.workspace }}/tests:/tests ${{ matrix.path }}:test \
+              bash -c "/tests/run_tests.sh"
+          fi
+
       - name: Install cosign
         if: github.event_name != 'pull_request'
         uses: sigstore/cosign-installer@59acb6260d9c0ba8f4a2f9d9b48431a222b68e20
         with:
           cosign-release: 'v2.2.4'
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@f95db51fddba0c2d1ec667646a06c2ce06100226
 
       - name: Log into registry ${{ env.REGISTRY }}
         if: github.event_name != 'pull_request'
@@ -54,14 +74,58 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Pull necessary Docker images
-        id: pull-images
+      - name: Push Docker image
+        if: github.event_name != 'pull_request'
+        uses: docker/build-push-action@0565240e2d4ab88bba5387d719585280857ece09
+        id: push
+        with:
+          context: ./${{ matrix.path }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=${{ matrix.path }}
+
+      - name: Sign the published Docker image
+        if: github.event_name != 'pull_request'
+        env:
+          TAGS: ${{ steps.meta.outputs.tags }}
+          DIGEST: ${{ steps.push.outputs.digest }}
         run: |
-          dependencies=$(echo '${{ matrix.dependencies }}' | jq -r '.[]')
-          for image in $dependencies; do
-            echo "Pulling $image..."
-            docker pull $image
+          for tag in ${TAGS}; do
+            cosign sign --yes ${tag}@${DIGEST}
           done
+
+  # Build HPC images after base images are pushed to registry
+  build-hpc:
+    needs: build-base
+    if: github.event_name != 'pull_request'
+    runs-on: ${{ contains(matrix.path, 'intel') && fromJSON('{"group":"Default","labels":"ubuntu-75gb"}') || 'ubuntu-latest' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - path: adaptivecpp-hpc
+            base: adaptivecpp-base
+          - path: intel-sycl-hpc
+            base: intel-sycl-base
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@f95db51fddba0c2d1ec667646a06c2ce06100226
+
+      - name: Log into registry ${{ env.REGISTRY }}
+        uses: docker/login-action@343f7c4344506bcbf9b4de18042ae17996df046d
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Extract Docker metadata
         id: meta
@@ -69,22 +133,49 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ matrix.path }}
 
-      - name: Build and push Docker image
+      # Base image was just pushed by build-base job, use it from registry
+      - name: Build Docker image
         uses: docker/build-push-action@0565240e2d4ab88bba5387d719585280857ece09
-        id: build-and-push
         with:
           context: ./${{ matrix.path }}
-          push: ${{ github.event_name != 'pull_request' }}
+          load: true
+          tags: ${{ matrix.path }}:test
+          build-args: |
+            BASE_IMAGE=${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ matrix.base }}:main
+          cache-from: type=gha,scope=${{ matrix.path }}
+          cache-to: type=gha,scope=${{ matrix.path }},mode=max
+
+      - name: Run tests
+        run: |
+          if [ "${{ matrix.path }}" = "intel-sycl-hpc" ]; then
+            docker run --rm -v ${{ github.workspace }}/tests:/tests ${{ matrix.path }}:test \
+              bash -c "source /opt/intel/oneapi/setvars.sh && /tests/run_tests.sh"
+          elif [ "${{ matrix.path }}" = "adaptivecpp-hpc" ]; then
+            docker run --rm -v ${{ github.workspace }}/tests:/tests ${{ matrix.path }}:test \
+              bash -c "/tests/run_tests.sh"
+          fi
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@59acb6260d9c0ba8f4a2f9d9b48431a222b68e20
+        with:
+          cosign-release: 'v2.2.4'
+
+      - name: Push Docker image
+        uses: docker/build-push-action@0565240e2d4ab88bba5387d719585280857ece09
+        id: push
+        with:
+          context: ./${{ matrix.path }}
+          push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          build-args: |
+            BASE_IMAGE=${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ matrix.base }}:main
+          cache-from: type=gha,scope=${{ matrix.path }}
 
       - name: Sign the published Docker image
-        if: ${{ github.event_name != 'pull_request' }}
         env:
           TAGS: ${{ steps.meta.outputs.tags }}
-          DIGEST: ${{ steps.build-and-push.outputs.digest }}
+          DIGEST: ${{ steps.push.outputs.digest }}
         run: |
           for tag in ${TAGS}; do
             cosign sign --yes ${tag}@${DIGEST}

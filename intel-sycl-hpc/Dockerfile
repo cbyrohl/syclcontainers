@@ -1,5 +1,6 @@
 # Use the custom Intel SYCL base image
-FROM ghcr.io/thor-rt/intel-sycl-base:main
+ARG BASE_IMAGE=ghcr.io/thor-rt/intel-sycl-base:main
+FROM ${BASE_IMAGE}
 
 # Set environment variables to non-interactive
 ENV DEBIAN_FRONTEND=noninteractive
