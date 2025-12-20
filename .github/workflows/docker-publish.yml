@@ -29,6 +29,13 @@ jobs:
       id-token: write
 
     steps:
+      - name: Free disk space for Intel builds
+        if: contains(matrix.path, 'intel')
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+          sudo docker image prune --all --force
+          df -h
+
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -114,6 +121,13 @@ jobs:
       id-token: write
 
     steps:
+      - name: Free disk space for Intel builds
+        if: contains(matrix.path, 'intel')
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+          sudo docker image prune --all --force
+          df -h
+
       - name: Checkout repository
         uses: actions/checkout@v4
 
