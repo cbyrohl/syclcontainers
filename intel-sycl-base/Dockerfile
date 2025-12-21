@@ -17,7 +17,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     gdb \
     cmake \
     ninja-build \
-    libboost-all-dev \
+    libboost-dev \
+    libboost-program-options-dev \
     python3-pip \
     intel-oneapi-compiler-dpcpp-cpp-2025.0 \
     intel-oneapi-mkl-devel-2025.0 \
@@ -43,6 +44,7 @@ RUN wget -qO- https://apt.llvm.org/llvm-snapshot.gpg.key | tee /etc/apt/trusted.
     libllvmspirvlib-${LLVM_VERSION}-dev \
     libhwloc-dev \
     libzstd-dev \
+    zlib1g-dev \
     ocl-icd-libopencl1 \
     ocl-icd-opencl-dev \
     clinfo \
