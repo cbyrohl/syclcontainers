@@ -72,6 +72,7 @@ RUN wget -qO- https://apt.llvm.org/llvm-snapshot.gpg.key | tee /etc/apt/trusted.
         llvm-${LLVM_VERSION}-dev libclang-${LLVM_VERSION}-dev libclang-cpp${LLVM_VERSION}-dev \
         libpolly-${LLVM_VERSION}-dev libclang-rt-${LLVM_VERSION}-dev libclang-common-${LLVM_VERSION}-dev \
         mesa-vulkan-drivers mesa-libgallium libllvm20 libllvm17t64 ocl-icd-opencl-dev \
+    && apt-mark manual libboost-dev libboost-program-options-dev \
     && apt-get autoremove -y && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
     && rm -rf /usr/share/doc/* /usr/share/man/* /usr/share/info/*
