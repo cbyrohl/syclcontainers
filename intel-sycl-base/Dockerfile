@@ -17,7 +17,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     gdb \
     cmake \
     ninja-build \
-    libboost-all-dev \
+    libboost-dev \
+    libboost-program-options-dev \
     python3-pip \
     intel-oneapi-compiler-dpcpp-cpp-2025.0 \
     intel-oneapi-mkl-devel-2025.0 \
@@ -43,6 +44,7 @@ RUN wget -qO- https://apt.llvm.org/llvm-snapshot.gpg.key | tee /etc/apt/trusted.
     libllvmspirvlib-${LLVM_VERSION}-dev \
     libhwloc-dev \
     libzstd-dev \
+    zlib1g-dev \
     ocl-icd-libopencl1 \
     ocl-icd-opencl-dev \
     clinfo \
@@ -70,6 +72,7 @@ RUN wget -qO- https://apt.llvm.org/llvm-snapshot.gpg.key | tee /etc/apt/trusted.
         llvm-${LLVM_VERSION}-dev libclang-${LLVM_VERSION}-dev libclang-cpp${LLVM_VERSION}-dev \
         libpolly-${LLVM_VERSION}-dev libclang-rt-${LLVM_VERSION}-dev libclang-common-${LLVM_VERSION}-dev \
         mesa-vulkan-drivers mesa-libgallium libllvm20 libllvm17t64 ocl-icd-opencl-dev \
+    && apt-mark manual libboost-dev libboost-program-options-dev \
     && apt-get autoremove -y && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
     && rm -rf /usr/share/doc/* /usr/share/man/* /usr/share/info/*
